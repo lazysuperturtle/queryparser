@@ -28,19 +28,19 @@ def get_data():
 											else request.form.items() 
 		db = get_app_db()
 		db_data = get_db_data(db)
-		try:
-			new_query = url_to_query(request_data, db_data)
-			print(new_query)
-			cursor = db.execute(new_query)
-			result = cursor.fetchall()
-			clmn_names = [description[0] for description in cursor.description]
-			query_list = [list(x) for x in result]
-			dict_res = [{clmn_names[n]:list_res[n] for n in range(len(clmn_names))} \
-												   for list_res in query_list]
-			
-			json_dict["result"] = dict_res
-		except Exception as exc:
-			json_dict["result"] = str(exc)
+		# try:
+		new_query = url_to_query(request_data, db_data)
+		print(new_query)
+		cursor = db.execute(new_query)
+		result = cursor.fetchall()
+		clmn_names = [description[0] for description in cursor.description]
+		query_list = [list(x) for x in result]
+		dict_res = [{clmn_names[n]:list_res[n] for n in range(len(clmn_names))} \
+											   for list_res in query_list]
+		
+		json_dict["result"] = dict_res
+		# except Exception as exc:
+			# json_dict["result"] = str(exc)
 
 		return jsonify(json_dict)
 

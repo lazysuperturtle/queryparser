@@ -43,7 +43,7 @@ def parse_filter(*url_data):
 	val_data, grouped = url_data
 	val, data = list(val_data.items())[0]
 	arg = list(data.keys())[0]
-	get_sql_operator = lambda data : list(filter(lambda x: x!='', re.findall(r"[<=>]*", data)))[0]
+	get_sql_operator = lambda data : list(filter(lambda x: x!='', re.findall(r"[<=>]*", data)))
 	sql_operator = None
 	sql_value = None
 
@@ -53,19 +53,18 @@ def parse_filter(*url_data):
 		datetime_dates.sort()
 		datetime_dates_sql_format = [date.strftime("%Y-%m-%d") for date in datetime_dates]
 		if len(datetime_dates_sql_format) > 1: #have a range here
-			return f"'{val}' >= %s and '{val}' <= %s" % (datetime_dates_sql_format[0], datetime_dates_sql_format[1],)
+			return f"{val} >= '%s' and {val} <= '%s'" % (datetime_dates_sql_format[0], datetime_dates_sql_format[1],)
 		sql_value = "'%s'" % datetime_dates_sql_format[0]
-		sql_operator = get_sql_operator(arg)
-
+	
 	elif is_int(arg):
-		sql_value = re.findall(r"(\d+)", arg)[0]
-		sql_operator = get_sql_operator(arg)
+		sql_value = re.findall(r"(\d+)", arg)
+
 
 	else: #string data, only = operator
-		sql_value = arg
-		sql_operator = "="
-		
+		sql_value = "'%s'" % arg
 
+	operator_symbol = get_sql_operator(arg)
+	sql_operator = operator_symbol[0] if len(operator_symbol) > 0 else "="		
 	return f"{val} {sql_operator} %s" % sql_value
 
 
@@ -83,7 +82,7 @@ def parse_show(*url_data):
 	val_data, grouped = url_data
 	val, data = list(val_data.items())[0]
 	args = data.keys()
-	if grouped: args = list(map(lambda arg: sum_func_pattern.format(col_name=arg) if data[arg] == int else arg, args))
+	if grouped: args = list(map(lambda arg: sum_func_pattern.format(col_name=arg) if data[arg] == int or data[arg] == float else arg, args))
 	return ", ".join(col for col in args)
 
 def parse_cpi(*url_data):
@@ -91,8 +90,9 @@ def parse_cpi(*url_data):
 	val_data, grouped = url_data
 	val, data = list(val_data.items())[0]
 	arg = list(data.keys())[0]
+	print(arg)
 	if arg.lower() in ("true", "1"):
-		cols = ['spend', 'install']
+		cols = ['spend', 'installs']
 		if grouped: cols = [sum_func_pattern.format(col_name) for col_name in cols]
 		cpi_query_func = " ,{spend}/{installs} as cpi".format(spend=cols[0], installs=cols[1])
 		return cpi_query_func
